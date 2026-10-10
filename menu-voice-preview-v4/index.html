@@ -78,9 +78,16 @@ function pause(){stopHold();if(!running)return;paused=!paused;E('pauseOverlay').
 E('language').onchange=()=>{categories();voiceStatus()};E('category').onchange=loadCategory;E('words').oninput=()=>{E('category').value='custom';refresh()};E('swap').onclick=()=>{E('words').value=parse(E('words').value).map(x=>x.reverse().join('\t')).join('\n');refresh()};E('testVoice').onclick=()=>{speak({'de-DE':'Guten Morgen','es-ES':'Buenos días','da-DK':'Godmorgen','en-US':'Good morning'}[E('language').value]||'Hello')};E('play').onclick=start;E('again').onclick=start;E('restart').onclick=start;E('pause').onclick=pause;function menu(){stopHold();running=false;paused=false;cancelAnimationFrame(raf);E('game').classList.remove('active');E('menu').classList.add('active')}E('mainMenu').onclick=menu;E('overMenu').onclick=menu;E('sound').onclick=()=>{soundOn=!soundOn;E('sound').textContent=soundOn?'🔊 SOUND ON':'🔇 SOUND OFF'};
 window.addEventListener('keydown',e=>{if(!E('game').classList.contains('active'))return;let k=e.key.toLowerCase(),dirs={arrowup:[0,-1],w:[0,-1],arrowdown:[0,1],s:[0,1],arrowleft:[-1,0],a:[-1,0],arrowright:[1,0],d:[1,0]};if(dirs[k]){e.preventDefault();beginHold(...dirs[k],k)}if(k==='p'&&!e.repeat)pause()},{passive:false});window.addEventListener('keyup',e=>{if(e.key.toLowerCase()===heldKey)stopHold()});[['touchUp',0,-1],['touchDown',0,1],['touchLeft',-1,0],['touchRight',1,0]].forEach(([id,x,y])=>{let el=E(id);el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);beginHold(x,y,id)},{passive:false});['pointerup','pointercancel','lostpointercapture'].forEach(type=>el.addEventListener(type,stopHold))});let swipe=null;cv.addEventListener('pointerdown',e=>{swipe={x:e.clientX,y:e.clientY}});cv.addEventListener('pointerup',e=>{if(!swipe)return;let dx=e.clientX-swipe.x,dy=e.clientY-swipe.y;swipe=null;if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;Math.abs(dx)>Math.abs(dy)?steer(Math.sign(dx),0):steer(0,Math.sign(dy))});document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused)pause()});window.addEventListener('blur',()=>{stopHold();if(running&&!paused)pause()});if('speechSynthesis'in window){speechSynthesis.addEventListener('voiceschanged',voiceStatus);setTimeout(voiceStatus,400)}const VOCAB_API='https://boringteacher-vocabulary-api.mcproductionsdk.workers.dev';let lastStudentLink='';E('studentPlay').onclick=start;
 E('shareStudentLink').onclick=async()=>{let pairs=parse(E('words').value),status=E('shareStatus'),btn=E('shareStudentLink');if(pairs.length<5){status.textContent='Please add at least five pairs.';return}let controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),12000);btn.disabled=true;status.textContent='Saving vocabulary…';try{let res=await fetch(VOCAB_API+'/sets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:E('category').selectedOptions[0]?.textContent||'Word Eater',language:E('language').value,pairs}),signal:controller.signal});let data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);if(!data.id)throw Error('No set ID returned');let url='https://boringteacher.com/word-eater/menu-voice-preview-v4/index.html#set='+encodeURIComponent(data.id);lastStudentLink=url;status.textContent='✓ Student link ('+pairs.length+' words): '+url;try{await navigator.clipboard.writeText(url);status.textContent+=' · Copied to clipboard'}catch(e){status.textContent+=' · Select and copy the link above'}}catch(e){status.textContent='Could not create link: '+(e.name==='AbortError'?'Request timed out after 12 seconds':e.message)}finally{clearTimeout(timeout);btn.disabled=false}};
+function enforceStudentMenu(){
+ const student=location.hash.startsWith('#set=');
+ const teacher=document.querySelector('#menu .teacherMenu'),intro=E('studentIntro');
+ document.body.classList.toggle('studentMode',student);
+ if(teacher){teacher.hidden=student;teacher.style.setProperty('display',student?'none':'grid','important')}
+ if(intro){intro.hidden=!student;intro.style.setProperty('display',student?'block':'none','important')}
+ return student
+}
 async function loadStudentLink(){
- if(!location.hash.startsWith('#set=')){document.body.classList.remove('studentMode');return false}
- document.body.classList.add('studentMode');
+ if(!enforceStudentMenu())return false;
  E('studentSetTitle').textContent='LOADING VOCABULARY…';E('studentSetMeta').textContent='PLEASE WAIT';E('studentPlay').disabled=true;
  try{
   let id=decodeURIComponent(location.hash.slice(5)).trim();if(!id)throw Error('Missing set ID');
@@ -102,5 +109,6 @@ async function loadStudentLink(){
  }catch(e){console.error('Word Eater shared set load failed',e);E('studentSetTitle').textContent='SET COULD NOT BE LOADED';E('studentSetMeta').textContent='Could not load vocabulary: '+(e.name==='AbortError'?'Request timed out':e.message);return false}
 }
 window.addEventListener('hashchange',loadStudentLink);
-categories();voiceStatus();draw();loadStudentLink();
+window.addEventListener('pageshow',enforceStudentMenu);
+categories();voiceStatus();draw();enforceStudentMenu();loadStudentLink();
 })();</script></body></html>
