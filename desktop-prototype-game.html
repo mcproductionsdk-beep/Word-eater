@@ -70,6 +70,41 @@ html,body{height:100%;overflow:hidden!important}
 #game .toast{order:3!important;flex:0 0 22px!important;height:22px!important;min-height:22px!important;max-height:22px!important;line-height:20px!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;width:100%!important;text-align:center!important;margin:0!important;padding:0 3px!important;font-size:11px!important}
 #game .boardbox{flex-shrink:1!important;min-height:0!important}
 }
+
+/* DESKTOP PROTOTYPE V3 — Sentence Eater proportional canvas model.
+   Desktop only. Mobile portrait rules and gameplay code remain untouched. */
+@media (min-width:761px){
+  #game.active{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    min-height:0!important;
+    overflow:hidden!important;
+  }
+  #game .boardbox{
+    position:relative!important;
+    flex:1 1 auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-width:1056px!important;
+    max-height:100%!important;
+    aspect-ratio:33 / 19!important;
+    align-self:center!important;
+    margin:4px auto!important;
+    overflow:hidden!important;
+  }
+  #game .boardbox canvas{
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    aspect-ratio:33 / 19!important;
+    object-fit:contain!important;
+    image-rendering:pixelated!important;
+  }
+}
 </style></head><body><main class="app"><h1>WORD EATER</h1><section id="menu" class="screen" hidden aria-hidden="true"><div class="menuGrid">
 <div class="card settings"><h2>GAME SETTINGS</h2><p class="muted">Choose a language and built-in vocabulary category, or paste your own words in the panel alongside.</p><div class="row"><label>LANGUAGE<select id="language"><option value="de-DE">German</option><option value="es-ES">Spanish</option><option value="da-DK">Danish</option><option value="en-US">English</option></select></label><label>VOCABULARY<select id="category"></select></label></div><div id="voiceCheck" class="voice">Checking voices…</div><button id="testVoice" class="yellow">🔊 TEST VOICE</button><div class="instructions"><b>HOW TO PLAY</b><p>Eat the moving correct word. Avoid wandering wrong-word ghosts. Collect dots and power pellets. Tap to move one tile; hold arrow keys / mobile arrows to keep moving. P pauses.</p></div><div class="setInfo"><b id="setTitle">WORD EATER</b><div id="setMeta" class="muted"></div></div><button id="play" class="primary wide">▶ PLAY</button></div>
 <div class="card vocab"><h2>PASTE QUIZLET WORDS</h2><p class="muted">Paste tab-separated term and definition pairs. Built-in vocabulary is editable here too.</p><textarea id="words" aria-label="Vocabulary pairs"></textarea><button id="swap">⇄ SWAP SIDES</button><div id="preview" class="preview"></div><div id="error" class="error"></div><div class="share"><h2>SHARE VOCABULARY</h2><p class="muted">Anyone can create a link for the currently selected built-in or custom vocabulary.</p><button id="createStudentLink" class="pink">🔗 CREATE LINK</button><button id="copyStudentLink" class="yellow" style="display:none">📋 COPY LINK</button><div id="shareStatus" class="muted" role="status"></div></div></div>
